@@ -5,6 +5,7 @@
 #include <bitset>
 #include <vector>
 #include <string>
+#include<bits/stdc++.h>
 using namespace std;
 typedef short int uint;
 typedef unsigned long long int ullint;
@@ -1006,7 +1007,7 @@ void initialiseLabel(int n)
         while(Den0[i]&tde)
             Den0[i]^=(Den0[i]&tde);
     }
-spanTrees(tt,0,n);
+    spanTrees(tt,0,n);
 }
 
 void CycGen(const int n)
@@ -1159,7 +1160,7 @@ bool Itir(int p, int q, int szALLde, int sig, const int n)
                         }
                         AddToFillLR(tpL,tpR,n);
                         myfile<<",";
-                        syym = sig*(dv-1);
+                        syym = -sig*(dv-1);
                         myfile<<syym<<",";
                         tex<<"\\[";
                         if(syym<0 && syym!=-1)
@@ -1181,12 +1182,16 @@ bool Itir(int p, int q, int szALLde, int sig, const int n)
                             if(tpR[k]==k)
                                 tex<<"f_{"<<2*tpR[k]<<"}^{-}";
                         }
-                        tex<<"\\left(";
-                        initialiseLabel(n);
-                        tex<<"\\begin{array}{rcl}";
-                        organizeAndWrite(n);
-                        tex<<"\\end{array}";
-                        tex<<"\\right)";
+
+                        if(n!=1)
+                        {
+                            tex<<"\\left(";
+                            initialiseLabel(n);
+                            tex<<"\\begin{array}{rcl}";
+                            organizeAndWrite(n);
+                            tex<<"\\end{array}";
+                            tex<<"\\right)";
+                        }
                         tex<<"\\]";
                         LN++;
                     }
@@ -1467,43 +1472,76 @@ void PropreLabel(uint *L, uint *R, uint *PosL, uint *PosR, const int n)
 
 int main()
 {
+    float aa, bb;
     int n;
+    int FerOrBos;
     irrOnly = 2;
     ostringstream stm ;
     cout << "Enter the order n" << endl;
-    cin>>n;
-    while(true)
+    cin>>aa;
+    if(floor(aa)!=ceil(aa))
     {
-        cout<<"If you need to evaluate only irreducible diagrams enter the number 0"<<endl;
-        cout<<"If you need to evaluate all diagrams (including HF) enter the number 1"<<endl;
-        cin>>irrOnly;
-        if(irrOnly == 0 || irrOnly == 1)
-            break;
+        cout<<"Failed ! Please enter an integer value"<<endl;
     }
-    dn = 2*n;
-    unsigned int maxD = ceil(pow(3.5,n-1));
-    matDen.reserve(maxD), matSignDen.reserve(maxD), matNom.reserve(maxD), matSignNom.reserve(maxD), matCoefNom.reserve(maxD);
-    posZero.resize(2*maxD), posOne.resize(2*maxD);
-    bitOne.resize(2*maxD), bitZero.resize(2*maxD);
-    CycGen(n);
-    stm<<n;
-    string sn = stm.str();
-    string ss0="GrandPotential", ss1=".txt", sstx1=".tex";
-    string ss=ss0+sn+ss1, sstx=ss0+sn+sstx1;
-    myfile.open(ss);
-    myfile<<"{";
-    tex.open(sstx);
-    tex<<"\\documentclass{article}"<<endl;
-    tex<<"\\usepackage{geometry}"<<endl;
-    tex<<"\\geometry{paperwidth=60cm,left=2cm,right=2cm,paperheight=29.7cm,top=1cm,height=26.5cm}"<<endl;
-    tex<<"\\usepackage{amsmath}"<<endl;
-    tex<<"\\begin{document}"<<endl;
-    tex<<"The grand potential of the order "<<n<<endl;
-    Distrib(v, -1, n);//-1 for fermions and +1 for bosons
-    tex<<endl;
-    tex<<"\\end{document}"<<endl;
-    tex.close();
-    myfile<<"Nothing}";
-    myfile.close();
+    else
+    {
+        n=(int)aa;
+        if(n<=0)
+            cout<<"Please enter a positive natural number"<<endl;
+        else if(n>=32)
+            cout<<"This value is out of the range, Please enter a value less than 32"<<endl;
+        else
+        {
+            cout<<"Please enter -1 for Fermions or 1 for Bosons"<<endl;
+            cin>>bb;
+            if(floor(bb)!=ceil(bb))
+            {
+                cout<<"Failed! Please enter only -1 for Fermions or 1 for Bosons"<<endl;
+            }
+            else
+            {
+                FerOrBos = (int)bb;
+                if(!(FerOrBos==-1 || FerOrBos==1))
+                    cout<<"Please enter only -1 for Fermions or 1 for Bosons"<<endl;
+                else
+                {
+                    while(true)
+                    {
+                        cout<<"If you need to evaluate only irreducible diagrams enter the number 0"<<endl;
+                        cout<<"If you need to evaluate all diagrams (including HF) enter the number 1"<<endl;
+                        cin>>irrOnly;
+                        if(irrOnly == 0 || irrOnly == 1)
+                            break;
+                    }
+                    dn = 2*n;
+                    unsigned int maxD = ceil(pow(3.5,n-1));
+                    matDen.reserve(maxD), matSignDen.reserve(maxD), matNom.reserve(maxD), matSignNom.reserve(maxD), matCoefNom.reserve(maxD);
+                    posZero.resize(2*maxD), posOne.resize(2*maxD);
+                    bitOne.resize(2*maxD), bitZero.resize(2*maxD);
+                    CycGen(n);
+                    stm<<n;
+                    string sn = stm.str();
+                    string ss0="GrandPotential", ss1=".txt", sstx1=".tex";
+                    string ss=ss0+sn+ss1, sstx=ss0+sn+sstx1;
+                    myfile.open(ss);
+                    myfile<<"{";
+                    tex.open(sstx);
+                    tex<<"\\documentclass{article}"<<endl;
+                    tex<<"\\usepackage{geometry}"<<endl;
+                    tex<<"\\geometry{paperwidth=60cm,left=2cm,right=2cm,paperheight=29.7cm,top=1cm,height=26.5cm}"<<endl;
+                    tex<<"\\usepackage{amsmath}"<<endl;
+                    tex<<"\\begin{document}"<<endl;
+                    tex<<"The grand potential of the order "<<n<<endl;
+                    tex<<"\\[\\Omega_{"<<sn<<"} = \\]"<<endl;
+                    Distrib(v, FerOrBos, n);
+                    tex<<endl;
+                    tex<<"\\end{document}"<<endl;
+                    tex.close();
+                    myfile<<"Nothing}";
+                    myfile.close();
+                }
+            }
+        }
+    }
     return 0;
 }
