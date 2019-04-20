@@ -1,0 +1,121 @@
+(*
+The hamiltonien: H=Subscript[H, 0]+Subscript[H, I]=\!\(
+\*SubscriptBox[\(\[Sum]\), \(k\)]\(\((
+\*SubscriptBox[\(E\), \(k\)] - \[Mu])\)
+\*SuperscriptBox[
+SubscriptBox[\(a\), \(k\)], \(+\)]
+\*SubscriptBox[\(a\), \(k\)]\)\)+\!\(
+\*FractionBox[\(1\), \(2\)]
+\*SubscriptBox[\(\[Sum]\), \(ijkl\)]\)<i,j|V|k,l>Subscript[a, \
+i]^+Subscript[a, j]^+Subscript[a, l]Subscript[a, k];
+						=\!\(
+\*SubscriptBox[\(\[Sum]\), \(k\)]\(\((
+\*SubscriptBox[\(E\), \(k\)] - \[Mu])\)
+\*SuperscriptBox[
+SubscriptBox[\(a\), \(k\)], \(+\)]
+\*SubscriptBox[\(a\), \(k\)]\)\)+1/4\!\(
+\*SubscriptBox[\(\[Sum]\), \(ijkl\)]\({i, j | V | k, l}
+\*SuperscriptBox[
+SubscriptBox[\(a\), \(i\)], \(+\)]
+\*SuperscriptBox[
+SubscriptBox[\(a\), \(j\)], \(+\)]
+\*SubscriptBox[\(a\), \(l\)]
+\*SubscriptBox[\(a\), \(k\)]\)\);
+The grand potentiel printed in the form: \[CapitalOmega]=Subscript[\
+\[CapitalOmega], 0]+Subscript[\[CapitalOmega], 1]+Subscript[\
+\[CapitalOmega], 2]+...+Subscript[\[CapitalOmega], or]+...;
+or indicate the order;
+The first order is: Subscript[\[CapitalOmega], \
+0]=\[Epsilon]/\[Beta]\!\(
+\*SubscriptBox[\(\[Sum]\), \(k\)]\(log\((1 - 
+\*SuperscriptBox[\(\[Epsilon]e\), \(-
+\*SubscriptBox[\(\[Beta]E\), \(k\)]\)])\)\)\);
+Where \[Beta]=1/(Subscript[k, B]T), Subscript[k, B]: Boltzmann \
+constant and T the temperature;
+Statistical factors: Fn[p]=\[Epsilon]/(e^Subscript[\[Beta]En, p]-\
+\[Epsilon]), Fp[p]=1+Fn[p]=1/(e^Subscript[\[Beta]E, p]-\[Epsilon]);
+Interacting potential: \
+pot[i,j,k,l]={i,j|V|k,l}=<i,j|V|k,l>+\[Epsilon]<i,j|V|l,k>;
+\[Epsilon]=-1 for fermions and \[Epsilon]=1 for bosons;
+The energy: En[p]=Subscript[E, p]-\[Mu] and \[Mu]: The chemical \
+potential;
+*)
+(*Decompresse denominator*)
+ToFormD[Den_, Nig_] := (
+   Dig = IntegerDigits[Den, 2, 2 n];
+   Ni = IntegerDigits[Nig, 2, 2 n];
+   Posi = IntegerDigits[BitXor[Den, Nig], 2, 2 n];
+   fo = 0;
+   For[j = 2 n, j >= 1, j--,
+    If[Dig[[j]] == 1 && Posi[[j]] == 1,
+     fo += En[2 n + 1 - j],
+     If[Dig[[j]] == 1 && Ni[[j]] == 1,
+      fo -= En[2 n + 1 - j]]
+     ]
+    ];
+   Return[fo]
+   );
+(*Decompresse nomenator*)
+ToFormN[Nom_, SignNom_, SignCoefNom_] := (
+   Dig = IntegerDigits[Nom, 2, 2 n];
+   Posi = IntegerDigits[SignNom, 2, 2 n];
+   Ni = IntegerDigits[BitXor[SignNom, Nom], 2, 2 n];
+   fo = 1;
+   For[j = 2 n, j >= 1, j--,
+    If[Dig[[j]] == 1 && Posi[[j]] == 1,
+     fo *= Fn[2 n + 1 - j],
+     If[Dig[[j]] == 1 && Ni[[j]] == 1,
+      fo *= Fp[2 n + 1 - j]]
+     ]
+    ];
+   fo = fo*SignCoefNom;
+   Return[fo]
+   );
+Str0 = SetDirectory[NotebookDirectory[]] <> "\\GrandPotential";
+
+For[or = 3, or <= 3, or++,
+  Stri = Str0 <> ToString[or] <> ".txt";
+  dt = Import[Stri];
+  Hug = ToExpression[dt];
+  n = Length[Hug[[1]]]/2;
+  TTRes = 0;
+  LN = Length[Hug]/7;
+  For[ii = 1, ii <= LN, ii++,
+   LR = Hug[[7 ii - 6]];
+   Sym = Hug[[7 ii - 5]];
+   Den = Hug[[7 ii - 4]];
+   Nig = Hug[[7 ii - 3]];
+   Nom = Hug[[7 ii - 2]];
+   SignNom = Hug[[7 ii - 1]];
+   SignCoefNom = Hug[[7 ii]];
+   L = {};
+   R = {};
+   For[i = 1, i <= n, i++,
+    AppendTo[L, LR[[2 i - 1]]];
+    AppendTo[R, LR[[2 i]]];
+    ];
+   PrN = 1;
+   POT = 1;(*Building the potentiel*)
+   For[i = 1, i <= n, i++,
+    If[L[[i]] == i, PrN *= Fn[2 i - 1] ];
+    If[R[[i]] == i, PrN *= Fn[2 i]];
+    POT *= pot[2 i - 1, 2 i, 2 L[[i]] - 1, 2 R[[i]]];
+    ];
+   all = 0;
+   For[k = 1, k <= Length[Den], k++,
+    tN = 0;
+    For[i = 1, i <= Length[Nom[[k]]], i++,
+     tN += 
+      ToFormN[Nom[[k]][[i]], SignNom[[k]][[i]], SignCoefNom[[k]][[i]]]
+     ];
+    pr = 1;
+    For[i = 1, i <= n - 1, i++,
+     pr *= ToFormD[Den[[k]][[i]], Nig[[k]][[i]]]
+     ];
+    all += tN/pr;
+    ];
+   TTRes += POT/Sym*PrN*(all);
+   ];
+  Print["The grand potentiel of the order ", or];
+  Print[Subscript[\[CapitalOmega], or], " = ", TTRes];
+  ];
